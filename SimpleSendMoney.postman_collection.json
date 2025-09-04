@@ -1,0 +1,584 @@
+{
+	"info": {
+		"_postman_id": "c5276818-7574-4f7d-ae9f-012bac8fda89",
+		"name": "SimpleSendMoney",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36881903"
+	},
+	"item": [
+		{
+			"name": "Get User Token Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// پاسخ JSON دریافت شده از سرور را تجزیه می‌کنیم.",
+							"const responseJson = pm.response.json();",
+							"",
+							"// بررسی می‌کنیم که آیا پاسخ شامل AuthenticationResult و AccessToken است یا خیر.",
+							"if (responseJson && responseJson.AuthenticationResult && responseJson.AuthenticationResult.AccessToken) {",
+							"    // Access Token را در متغیر محیطی \"accessToken\" ذخیره می‌کنیم.",
+							"    pm.environment.set(\"accessToken\", responseJson.AuthenticationResult.AccessToken);",
+							"    console.log(\"Access Token successfully stored for next requests.\");",
+							"",
+							"    // اگر ID Token هم نیاز دارید (اختیاری)",
+							"    if (responseJson.AuthenticationResult.IdToken) {",
+							"        pm.environment.set(\"idToken\", responseJson.AuthenticationResult.IdToken);",
+							"        console.log(\"ID Token successfully stored.\");",
+							"    }",
+							"",
+							"} else {",
+							"    // در صورت عدم موفقیت در گرفتن توکن، خطا را ثبت می‌کنیم.",
+							"    console.error(\"Failed to get Access Token from login response.\");",
+							"    // برای دیدن پاسخ کامل در صورت خطا:",
+							"    // console.error(\"Full response:\", JSON.stringify(responseJson, null, 2));",
+							"    pm.test(\"Authentication successful\", false); // تست را ناموفق اعلام می‌کند",
+							"}",
+							"",
+							"// یک تست ساده برای بررسی اینکه وضعیت پاسخ 200 OK است.",
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// دریافت مقادیر متغیرها از Environment",
+							"const username = pm.environment.get(\"username\");",
+							"const password = pm.environment.get(\"password\");",
+							"const clientId = pm.environment.get(\"clientId\");",
+							"",
+							"// ساختن بادی درخواست به صورت JSON",
+							"const requestBody = {",
+							"    \"AuthParameters\": {",
+							"        \"USERNAME\": username,",
+							"        \"PASSWORD\": password",
+							"    },",
+							"    \"AuthFlow\": \"USER_PASSWORD_AUTH\",",
+							"    \"ClientId\": clientId",
+							"};",
+							"",
+							"// تبدیل آبجکت JSON به رشته و تنظیم آن به عنوان بادی درخواست",
+							"pm.request.body.raw = JSON.stringify(requestBody);",
+							"",
+							"console.log(\"Request Body constructed in Pre-request Script:\", pm.request.body.raw);",
+							"// Generate a random integer between 1 and 100 (inclusive).",
+							"// یک عدد صحیح تصادفی بین 1 تا 100 (شامل 1 و 100) تولید می‌کند.",
+							"const randomAmount = Math.floor(Math.random() * 100) + 1;",
+							"",
+							"// Set the generated random amount to the environment variable 'transactionAmount'.",
+							"// مقدار تصادفی تولید شده را در متغیر محیطی 'transactionAmount' ذخیره می‌کند.",
+							"pm.environment.set(\"transactionAmount\", randomAmount);",
+							"",
+							"// Log the generated amount to the Postman Console for verification.",
+							"// مبلغ تولید شده را برای تأیید در Postman Console نمایش می‌دهد.",
+							"console.log(\"Generated random transaction amount:\", randomAmount);",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1"
+					},
+					{
+						"key": "X-Amz-Target",
+						"value": "AWSCognitoIdentityProviderService.InitiateAuth"
+					},
+					{
+						"key": "X-Amz-User-Agent",
+						"value": "aws-sdk-js/2.283.1 callback"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cognito-idp.eu-west-1.amazonaws.com/",
+					"protocol": "https",
+					"host": [
+						"cognito-idp",
+						"eu-west-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Generated from cURL: curl --location 'https://cognito-idp.eu-west-1.amazonaws.com/' \\\n--header 'Content-Type: application/x-amz-json-1.1' \\\n--header 'X-Amz-Target: AWSCognitoIdentityProviderService.InitiateAuth' \\\n--header 'X-Amz-User-Agent: aws-sdk-js/2.283.1 callback' \\\n--data-raw '{\n    \"AuthParameters\": {\n        \"USERNAME\": \"127@hubspot.com\",\n        \"PASSWORD\": \"Aa123456@\"\n    },\n    \"AuthFlow\": \"USER_PASSWORD_AUTH\",\n    \"ClientId\": \"7t0mgr4iefa1htlf0oect64blr\"\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "get transaction fee",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// پاسخ JSON دریافت شده از سرور را تجزیه می‌کنیم.",
+							"const responseJson = pm.response.json();",
+							"",
+							"// بررسی می‌کنیم که آیا پاسخ شامل rateQuoteId است یا خیر.",
+							"if (responseJson && responseJson.rateQuoteId) {",
+							"    // rateQuoteId را در متغیر محیطی \"rateQuoteId\" ذخیره می‌کنیم.",
+							"    pm.environment.set(\"rateQuoteId\", responseJson.rateQuoteId);",
+							"    console.log(\"rateQuoteId successfully stored:\", responseJson.rateQuoteId);",
+							"} else {",
+							"    // در صورت عدم یافتن rateQuoteId، خطا را ثبت می‌کنیم.",
+							"    console.error(\"rateQuoteId not found in get transaction fee response.\");",
+							"    // برای دیدن پاسخ کامل در صورت خطا:",
+							"    // console.error(\"Full response:\", JSON.stringify(responseJson, null, 2));",
+							"    pm.test(\"rateQuoteId extracted\", false); // تست را ناموفق اعلام می‌کند",
+							"}",
+							"",
+							"// یک تست ساده برای بررسی اینکه وضعیت پاسخ 200 OK است.",
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"   ",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "authorization",
+						"value": "Bearer {{accessToken}}"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "current-user",
+						"value": "{{currentUser}}"
+					},
+					{
+						"key": "origin",
+						"value": "https://webapp.kixian.com"
+					},
+					{
+						"key": "platform",
+						"value": "WEB"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://webapp.kixian.com/"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"macOS\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-site"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"creditor\": {\n        \"amount\": {{transactionAmount}},\n        \"currency\": {\n            \"iso\": \"GBP\"\n        },\n        \"accountId\": \"{{accountId}}\"\n    },\n    \"fixedSide\": \"CREDITOR\",\n    \"debtor\": {\n        \"currency\": {\n            \"iso\": \"GBP\"\n        },\n        \"walletId\": {{walletId}}\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://gateway.kixian.com/teller/v2/rates/get-transaction-fees",
+					"protocol": "https",
+					"host": [
+						"gateway",
+						"kixian",
+						"com"
+					],
+					"path": [
+						"teller",
+						"v2",
+						"rates",
+						"get-transaction-fees"
+					]
+				},
+				"description": "Generated from cURL: curl 'https://gateway.kixian.com/teller/v2/rates/get-transaction-fees' \\\n  -H 'accept: application/json, text/plain, */*' \\\n  -H 'accept-language: en-US,en;q=0.9' \\\n  -H 'authorization: Bearer eyJraWQiOiJ1ZEU1QW1JTGxqNXpBNzR1K0QyczNhZUMyemJJYW93dDhoaUlHNEFyY2VzPSIsImFsZyI6IlJTMjU2In0.eyJsYXN0TmFtZSI6IlRocmVlIiwic3ViIjoiNzJhNTE0MjQtNTA5MS03MDFmLTU5MDctODIzM2YyZWVmMDJjIiwiZGV2aWNlX2tleSI6ImV1LXdlc3QtMV83ZWMzMWFiMy01Mzg2LTQ5MGMtYTk5MC0zYzFlNGNmZGFlMmMiLCJhY2NvdW50VHlwZSI6InBlcnNvbmFsIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmV1LXdlc3QtMS5hbWF6b25hd3MuY29tXC9ldS13ZXN0LTFfUEFMOWI0ZTBoIiwiY2xpZW50X2lkIjoiM29hbHEzdjBvbzRydGZhZWhudGE2bWc3a24iLCJvcmlnaW5fanRpIjoiNmQzMDY0NTgtZDU1MC00MTY3LWI2ZTEtOTQ2YjNkNTUzNjVhIiwiY3VycmVudFVzZXIiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzUzNzI3NjM1LCJuYW1lIjoiV2ViIiwicGFydGllcyI6IjMyMTU4NGI0LTgwYzEtNzA1Mi1jYzk2LWFiNzY0ZGQxNDM4Mnw3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJleHAiOjE3NTM4MTQwMzUsImlhdCI6MTc1MzcyNzYzNSwianRpIjoiOWU3ZjczNDctZjU1ZS00ZWU2LTgwNGItMDdkOTFiZjY3M2UwIiwidXNlcm5hbWUiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMifQ.SeePApJ6vstqdnBpm0eTXR0vqJkkPt1T915QKCDS56F9EILZTx3vNo0hgdM_TsnDp39lbF1uPYxD2enhXb7wi5NIZ6PwE8MvnAOQ67mtyQAQVZ24ZMt49PYThXgBrAO_80Sw-qLUhgyKFn9HLWP-TridVBKQeHrFeQ17zVN25Smq70-706Zlp9hQ6QIhzdBIDKpjlw7qFmhqZpIzvmc-tuaSDDZCvnEHYzA2RlGQ34f8rtRAGhj208IJ89Efz-yDDwYvfoqGdbKGMhL0-w5R_IkA2aWy6wkzh6Iei8u57Nuqrqt6tKfmFg-4f7a7DU7GOulznl5qS-4S5N2KAmPY7A' \\\n  -H 'content-type: application/json' \\\n  -H 'current-user: 72a51424-5091-701f-5907-8233f2eef02c' \\\n  -H 'origin: https://webapp.kixian.com' \\\n  -H 'platform: WEB' \\\n  -H 'priority: u=1, i' \\\n  -H 'referer: https://webapp.kixian.com/' \\\n  -H 'sec-ch-ua: \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"' \\\n  -H 'sec-ch-ua-mobile: ?0' \\\n  -H 'sec-ch-ua-platform: \"macOS\"' \\\n  -H 'sec-fetch-dest: empty' \\\n  -H 'sec-fetch-mode: cors' \\\n  -H 'sec-fetch-site: same-site' \\\n  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \\\n  --data-raw '{\"creditor\":{\"amount\":0,\"currency\":{\"iso\":\"GBP\"},\"accountId\":\"55a73990-19be-4be5-93fa-f5c2062f5800\"},\"fixedSide\":\"CREDITOR\",\"debtor\":{\"currency\":{\"iso\":\"GBP\"},\"walletId\":59}}'"
+			},
+			"response": []
+		},
+		{
+			"name": "generate transacationID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// پاسخ JSON دریافت شده از سرور را تجزیه می‌کنیم.",
+							"// Parse the JSON response received from the server.",
+							"const responseJson = pm.response.json();",
+							"",
+							"// بررسی می‌کنیم که آیا پاسخ شامل id (transactionId) است یا خیر.",
+							"// Check if the response contains id (transactionId).",
+							"if (responseJson && responseJson.id) {",
+							"    // transactionId را در متغیر محیطی \"transactionId\" ذخیره می‌کنیم.",
+							"    // Store the transactionId in the \"transactionId\" environment variable.",
+							"    pm.environment.set(\"transactionId\", responseJson.id);",
+							"    console.log(\"transactionId successfully stored:\", responseJson.id);",
+							"} else {",
+							"    // در صورت عدم یافتن transactionId، خطا را ثبت می‌کنیم.",
+							"    // Log an error if transactionId is not found.",
+							"    console.error(\"transactionId not found in generate transaction ID response.\");",
+							"    // برای دیدن پاسخ کامل در صورت خطا:",
+							"    // For more detailed debugging, uncomment the line below to log the full response.",
+							"    // console.error(\"Full response:\", JSON.stringify(responseJson, null, 2));",
+							"    pm.test(\"transactionId extracted\", false); // تست را ناموفق اعلام می‌کند // Mark test as failed",
+							"}",
+							"",
+							"// یک تست ساده برای بررسی اینکه وضعیت پاسخ 200 OK است.",
+							"// A simple test to ensure the response status is 200 OK.",
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "authorization",
+						"value": "Bearer {{accessToken}}"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "current-user",
+						"value": "{{currentUser}}"
+					},
+					{
+						"key": "origin",
+						"value": "https://webapp.kixian.com"
+					},
+					{
+						"key": "platform",
+						"value": "WEB"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://webapp.kixian.com/"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"macOS\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-site"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"creditor\": {\n        \"accountId\": \"{{accountId}}\",\n        \"currency\": \"GBP\",\n        \"amount\": {{transactionAmount}}\n    },\n    \"rateQuoteId\": \"{{rateQuoteId}}\",\n    \"debtor\": {\n        \"walletId\": {{walletId}},\n        \"currency\": \"GBP\",\n        \"amount\": {{transactionAmount}}\n    },\n    \"reference\": \"Sent from Kixy\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://gateway.kixian.com/nickel/v2/transactions",
+					"protocol": "https",
+					"host": [
+						"gateway",
+						"kixian",
+						"com"
+					],
+					"path": [
+						"nickel",
+						"v2",
+						"transactions"
+					]
+				},
+				"description": "Generated from cURL: curl 'https://gateway.kixian.com/nickel/v2/transactions' \\\n  -H 'accept: application/json, text/plain, */*' \\\n  -H 'accept-language: en-US,en;q=0.9' \\\n  -H 'authorization: Bearer eyJraWQiOiJ1ZEU1QW1JTGxqNXpBNzR1K0QyczNhZUMyemJJYW93dDhoaUlHNEFyY2VzPSIsImFsZyI6IlJTMjU2In0.eyJsYXN0TmFtZSI6IlRocmVlIiwic3ViIjoiNzJhNTE0MjQtNTA5MS03MDFmLTU5MDctODIzM2YyZWVmMDJjIiwiZGV2aWNlX2tleSI6ImV1LXdlc3QtMV83ZWMzMWFiMy01Mzg2LTQ5MGMtYTk5MC0zYzFlNGNmZGFlMmMiLCJhY2NvdW50VHlwZSI6InBlcnNvbmFsIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmV1LXdlc3QtMS5hbWF6b25hd3MuY29tXC9ldS13ZXN0LTFfUEFMOWI0ZTBoIiwiY2xpZW50X2lkIjoiM29hbHEzdjBvbzRydGZhZWhudGE2bWc3a24iLCJvcmlnaW5fanRpIjoiNmQzMDY0NTgtZDU1MC00MTY3LWI2ZTEtOTQ2YjNkNTUzNjVhIiwiY3VycmVudFVzZXIiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzUzNzI3NjM1LCJuYW1lIjoiV2ViIiwicGFydGllcyI6IjMyMTU4NGI0LTgwYzEtNzA1Mi1jYzk2LWFiNzY0ZGQxNDM4Mnw3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJleHAiOjE3NTM4MTQwMzUsImlhdCI6MTc1MzcyNzYzNSwianRpIjoiOWU3ZjczNDctZjU1ZS00ZWU2LTgwNGItMDdkOTFiZjY3M2UwIiwidXNlcm5hbWUiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMifQ.SeePApJ6vstqdnBpm0eTXR0vqJkkPt1T915QKCDS56F9EILZTx3vNo0hgdM_TsnDp39lbF1uPYxD2enhXb7wi5NIZ6PwE8MvnAOQ67mtyQAQVZ24ZMt49PYThXgBrAO_80Sw-qLUhgyKFn9HLWP-TridVBKQeHrFeQ17zVN25Smq70-706Zlp9hQ6QIhzdBIDKpjlw7qFmhqZpIzvmc-tuaSDDZCvnEHYzA2RlGQ34f8rtRAGhj208IJ89Efz-yDDwYvfoqGdbKGMhL0-w5R_IkA2aWy6wkzh6Iei8u57Nuqrqt6tKfmFg-4f7a7DU7GOulznl5qS-4S5N2KAmPY7A' \\\n  -H 'content-type: application/json' \\\n  -H 'current-user: 72a51424-5091-701f-5907-8233f2eef02c' \\\n  -H 'origin: https://webapp.kixian.com' \\\n  -H 'platform: WEB' \\\n  -H 'priority: u=1, i' \\\n  -H 'referer: https://webapp.kixian.com/' \\\n  -H 'sec-ch-ua: \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"' \\\n  -H 'sec-ch-ua-mobile: ?0' \\\n  -H 'sec-ch-ua-platform: \"macOS\"' \\\n  -H 'sec-fetch-dest: empty' \\\n  -H 'sec-fetch-mode: cors' \\\n  -H 'sec-fetch-site: same-site' \\\n  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \\\n  --data-raw '{\"creditor\":{\"accountId\":\"55a73990-19be-4be5-93fa-f5c2062f5800\",\"currency\":\"GBP\",\"amount\":10},\"rateQuoteId\":\"3cc2eb7b-d3b9-4a6a-aded-fca142209311\",\"debtor\":{\"walletId\":59,\"currency\":\"GBP\",\"amount\":10},\"reference\":\"Sent from Kixy\"}'"
+			},
+			"response": []
+		},
+		{
+			"name": "review ",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "authorization",
+						"value": "Bearer {{accessToken}}"
+					},
+					{
+						"key": "current-user",
+						"value": "{{currentUser}}"
+					},
+					{
+						"key": "origin",
+						"value": "https://webapp.kixian.com"
+					},
+					{
+						"key": "platform",
+						"value": "WEB"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://webapp.kixian.com/"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"macOS\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-site"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+					}
+				],
+				"url": {
+					"raw": "https://gateway.kixian.com/activity/v1/activities/{{transactionId}}",
+					"protocol": "https",
+					"host": [
+						"gateway",
+						"kixian",
+						"com"
+					],
+					"path": [
+						"activity",
+						"v1",
+						"activities",
+						"{{transactionId}}"
+					]
+				},
+				"description": "Generated from cURL: curl 'https://gateway.kixian.com/activity/v1/activities/aea64910-5461-463a-b74e-b9225e68b6e8' \\\n  -H 'accept: application/json, text/plain, */*' \\\n  -H 'accept-language: en-US,en;q=0.9' \\\n  -H 'authorization: Bearer eyJraWQiOiJ1ZEU1QW1JTGxqNXpBNzR1K0QyczNhZUMyemJJYW93dDhoaUlHNEFyY2VzPSIsImFsZyI6IlJTMjU2In0.eyJsYXN0TmFtZSI6IlRocmVlIiwic3ViIjoiNzJhNTE0MjQtNTA5MS03MDFmLTU5MDctODIzM2YyZWVmMDJjIiwiZGV2aWNlX2tleSI6ImV1LXdlc3QtMV83ZWMzMWFiMy01Mzg2LTQ5MGMtYTk5MC0zYzFlNGNmZGFlMmMiLCJhY2NvdW50VHlwZSI6InBlcnNvbmFsIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmV1LXdlc3QtMS5hbWF6b25hd3MuY29tXC9ldS13ZXN0LTFfUEFMOWI0ZTBoIiwiY2xpZW50X2lkIjoiM29hbHEzdjBvbzRydGZhZWhudGE2bWc3a24iLCJvcmlnaW5fanRpIjoiNmQzMDY0NTgtZDU1MC00MTY3LWI2ZTEtOTQ2YjNkNTUzNjVhIiwiY3VycmVudFVzZXIiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzUzNzI3NjM1LCJuYW1lIjoiV2ViIiwicGFydGllcyI6IjMyMTU4NGI0LTgwYzEtNzA1Mi1jYzk2LWFiNzY0ZGQxNDM4Mnw3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJleHAiOjE3NTM4MTQwMzUsImlhdCI6MTc1MzcyNzYzNSwianRpIjoiOWU3ZjczNDctZjU1ZS00ZWU2LTgwNGItMDdkOTFiZjY3M2UwIiwidXNlcm5hbWUiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMifQ.SeePApJ6vstqdnBpm0eTXR0vqJkkPt1T915QKCDS56F9EILZTx3vNo0hgdM_TsnDp39lbF1uPYxD2enhXb7wi5NIZ6PwE8MvnAOQ67mtyQAQVZ24ZMt49PYThXgBrAO_80Sw-qLUhgyKFn9HLWP-TridVBKQeHrFeQ17zVN25Smq70-706Zlp9hQ6QIhzdBIDKpjlw7qFmhqZpIzvmc-tuaSDDZCvnEHYzA2RlGQ34f8rtRAGhj208IJ89Efz-yDDwYvfoqGdbKGMhL0-w5R_IkA2aWy6wkzh6Iei8u57Nuqrqt6tKfmFg-4f7a7DU7GOulznl5qS-4S5N2KAmPY7A' \\\n  -H 'current-user: 72a51424-5091-701f-5907-8233f2eef02c' \\\n  -H 'origin: https://webapp.kixian.com' \\\n  -H 'platform: WEB' \\\n  -H 'priority: u=1, i' \\\n  -H 'referer: https://webapp.kixian.com/' \\\n  -H 'sec-ch-ua: \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"' \\\n  -H 'sec-ch-ua-mobile: ?0' \\\n  -H 'sec-ch-ua-platform: \"macOS\"' \\\n  -H 'sec-fetch-dest: empty' \\\n  -H 'sec-fetch-mode: cors' \\\n  -H 'sec-fetch-site: same-site' \\\n  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'"
+			},
+			"response": []
+		},
+		{
+			"name": "confirm",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "authorization",
+						"value": "Bearer {{accessToken}}"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "current-user",
+						"value": "{{currentUser}}"
+					},
+					{
+						"key": "origin",
+						"value": "https://webapp.kixian.com"
+					},
+					{
+						"key": "platform",
+						"value": "WEB"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://webapp.kixian.com/"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"macOS\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-site"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"doCancelTransaction\": false,\n    \"otp\": \"\",\n    \"iconUrl\": \"https://kixian-public-assets-9n9mwcl.s3.eu-west-1.amazonaws.com/public/status/send-money/tree.json\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://gateway.kixian.com/nickel/v2/transactions/{{transactionId}}/confirm",
+					"protocol": "https",
+					"host": [
+						"gateway",
+						"kixian",
+						"com"
+					],
+					"path": [
+						"nickel",
+						"v2",
+						"transactions",
+						"{{transactionId}}",
+						"confirm"
+					]
+				},
+				"description": "Generated from cURL: curl 'https://gateway.kixian.com/nickel/v2/transactions/aea64910-5461-463a-b74e-b9225e68b6e8/confirm' \\\n  -H 'accept: application/json, text/plain, */*' \\\n  -H 'accept-language: en-US,en;q=0.9' \\\n  -H 'authorization: Bearer eyJraWQiOiJ1ZEU1QW1JTGxqNXpBNzR1K0QyczNhZUMyemJJYW93dDhoaUlHNEFyY2VzPSIsImFsZyI6IlJTMjU2In0.eyJsYXN0TmFtZSI6IlRocmVlIiwic3ViIjoiNzJhNTE0MjQtNTA5MS03MDFmLTU5MDctODIzM2YyZWVmMDJjIiwiZGV2aWNlX2tleSI6ImV1LXdlc3QtMV83ZWMzMWFiMy01Mzg2LTQ5MGMtYTk5MC0zYzFlNGNmZGFlMmMiLCJhY2NvdW50VHlwZSI6InBlcnNvbmFsIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmV1LXdlc3QtMS5hbWF6b25hd3MuY29tXC9ldS13ZXN0LTFfUEFMOWI0ZTBoIiwiY2xpZW50X2lkIjoiM29hbHEzdjBvbzRydGZhZWhudGE2bWc3a24iLCJvcmlnaW5fanRpIjoiNmQzMDY0NTgtZDU1MC00MTY3LWI2ZTEtOTQ2YjNkNTUzNjVhIiwiY3VycmVudFVzZXIiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzUzNzI3NjM1LCJuYW1lIjoiV2ViIiwicGFydGllcyI6IjMyMTU4NGI0LTgwYzEtNzA1Mi1jYzk2LWFiNzY0ZGQxNDM4Mnw3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMiLCJleHAiOjE3NTM4MTQwMzUsImlhdCI6MTc1MzcyNzYzNSwianRpIjoiOWU3ZjczNDctZjU1ZS00ZWU2LTgwNGItMDdkOTFiZjY3M2UwIiwidXNlcm5hbWUiOiI3MmE1MTQyNC01MDkxLTcwMWYtNTkwNy04MjMzZjJlZWYwMmMifQ.SeePApJ6vstqdnBpm0eTXR0vqJkkPt1T915QKCDS56F9EILZTx3vNo0hgdM_TsnDp39lbF1uPYxD2enhXb7wi5NIZ6PwE8MvnAOQ67mtyQAQVZ24ZMt49PYThXgBrAO_80Sw-qLUhgyKFn9HLWP-TridVBKQeHrFeQ17zVN25Smq70-706Zlp9hQ6QIhzdBIDKpjlw7qFmhqZpIzvmc-tuaSDDZCvnEHYzA2RlGQ34f8rtRAGhj208IJ89Efz-yDDwYvfoqGdbKGMhL0-w5R_IkA2aWy6wkzh6Iei8u57Nuqrqt6tKfmFg-4f7a7DU7GOulznl5qS-4S5N2KAmPY7A' \\\n  -H 'content-type: application/json' \\\n  -H 'current-user: 72a51424-5091-701f-5907-8233f2eef02c' \\\n  -H 'origin: https://webapp.kixian.com' \\\n  -H 'platform: WEB' \\\n  -H 'priority: u=1, i' \\\n  -H 'referer: https://webapp.kixian.com/' \\\n  -H 'sec-ch-ua: \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"' \\\n  -H 'sec-ch-ua-mobile: ?0' \\\n  -H 'sec-ch-ua-platform: \"macOS\"' \\\n  -H 'sec-fetch-dest: empty' \\\n  -H 'sec-fetch-mode: cors' \\\n  -H 'sec-fetch-site: same-site' \\\n  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \\\n  --data-raw '{\"doCancelTransaction\":false,\"otp\":\"\",\"iconUrl\":\"https://kixian-public-assets-9n9mwcl.s3.eu-west-1.amazonaws.com/public/status/send-money/tree.json\"}'"
+			},
+			"response": []
+		}
+	]
+}
